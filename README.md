@@ -1,16 +1,15 @@
 # YOLO Dataset Splitter
 
-Скрипт для конвертирования датасета, экспортируемого из CVAT в формате YOLO1.1
+A utility script for converting datasets exported from **CVAT** in **YOLO 1.1** format.
 
-Конвертирует в пригодный для YOLO (Ultralytics) формат с файлом dataset.yaml
-
-Так же сразу делает его разбиение его на train / val / test
+The script converts the dataset into a format compatible with **YOLO (Ultralytics)**,
+automatically generates `dataset.yaml`, and splits the data into **train / val / test** subsets.
 
 ---
 
-## Структура входного датасета
+## Input Dataset Structure
 
-Ожидается следующая структура:
+The following input structure is expected:
 
 dataset/
 ├─ obj_train_data/
@@ -22,39 +21,48 @@ dataset/
 │     └─ ...
 ├─ obj.names
 
-- .jpg — изображения
-- .txt — YOLO-аннотации
-- obj.names — список классов, по одному в строке
+- `.jpg / .jpeg / .png` — images
+- `.txt` — YOLO annotations
+- `obj.names` — class names, one per line
+
+Both layouts are supported:
+- images directly in `obj_train_data/`
+- images inside `obj_train_data/frames/`
 
 ---
 
-## Установка
+## Installation
 
-Для работы нужна лишь PyYAML библиотека, можно из глобального окружения запустить, либо создать виртуальное
+Only a small number of dependencies is required.
+The script can be run from a global Python environment or inside a virtual environment.
 
-### 1. Создание виртуального окружения
+### 1. Create a virtual environment (optional)
 
 python -m venv .venv
 
 Windows:
-.venv\Scripts\activate
+.venv\\Scripts\\activate
 
 Linux / macOS:
 source .venv/bin/activate
 
 ---
 
-### 2. Установка зависимостей
+### 2. Install dependencies
 
 pip install -r requirements.txt
 
+Dependencies:
+- PyYAML
+- tqdm
+
 ---
 
-## Конфигурация
+## Configuration
 
-Все параметры задаются в файле config.yaml.
+All parameters are defined in `config.yaml`.
 
-Пример:
+Example:
 
 dataset:
   path: "D:/Datasets/path_to_dataset_folder"
@@ -69,15 +77,15 @@ random:
 
 ---
 
-## Запуск
+## Usage
 
 python split_dataset.py
 
 ---
 
-## Результат
+## Output
 
-Создаётся новая директория <dataset>_converted:
+A new directory `<dataset>_converted` is created:
 
 dataset_converted/
 ├─ images/
@@ -89,6 +97,3 @@ dataset_converted/
 │  ├─ val/
 │  └─ test/
 └─ dataset.yaml
-
-
-

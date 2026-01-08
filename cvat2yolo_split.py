@@ -1,10 +1,14 @@
 import random
 import shutil
 from pathlib import Path
+
 import yaml
+from tqdm import tqdm
 
 
 def main(config_path: str):
+    print("=== YOLO Dataset Splitter started ===")
+
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
@@ -16,22 +20,25 @@ def main(config_path: str):
     obj_dir = dataset_dir / "obj_train_data"
     names_file = dataset_dir / "obj.names"
 
+    if not obj_dir.exists():
+        print(f"[ERROR] obj_train_data not found: {obj_dir}")
+        return
+
     frames_dir = obj_dir / "frames"
-    if frames_dir.exists():
-        img_dir = frames_dir
-    else:
-        img_dir = obj_dir
+    img_dir = frames_dir if frames_dir.exists() else obj_dir
 
-    # create output directories
-    output_dir = Path(dataset_path + "_converted")
-    for part in split_ratio.keys():
-        (output_dir / "images" / part).mkdir(parents=True, exist_ok=True)
-        (output_dir / "labels" / part).mkdir(parents=True, exist_ok=True)
+    print(f"Image directory selected: {img_dir}")
 
-    # collect & shuffle images
+    # collect images
     images = []
     for ext in ("*.jpg", "*.jpeg", "*.png"):
         images.extend(img_dir.glob(ext))
+
+    if not images:
+        print("[ERROR] No images found. Supported formats: jpg, jpeg, png")
+        return
+
+    print(f"Images found: {len(images)}")
 
     random.seed(seed)
     random.shuffle(images)
@@ -47,16 +54,35 @@ def main(config_path: str):
         "test": images[val_end:],
     }
 
-    # copy files
-    for split, imgs in splits.items():
-        for img in imgs:
-            label = img.with_suffix(".txt")
-            shutil.copy(img, output_dir / "images" / split / img.name)
-            if label.exists():
-                shutil.copy(label, output_dir / "labels" / split / label.name)
-    print(f"spliting finished! dataset saved in folder: {output_dir}")
+    print("Dataset split:")
+    for k, v in splits.items():
+        print(f"  {k}: {len(v)} images")
 
-    # make yaml file
+    # create output directories
+    output_dir = Path(dataset_path + "_converted")
+    for part in splits.keys():
+        (output_dir / "images" / part).mkdir(parents=True, exist_ok=True)
+        (output_dir / "labels" / part).mkdir(parents=True, exist_ok=True)
+
+    # copy files with progress bar
+    print("Copying files...")
+    for split, imgs in splits.items():
+        for img in tqdm(imgs, desc=f"Copying {split}", unit="img"):
+            target_img = output_dir / "images" / split / img.name
+            target_label = output_dir / "labels" / split / img.with_suffix(".txt").name
+
+            # skip if already exists
+            if target_img.exists():
+                continue
+            shutil.copy(img, target_img)
+
+            label = img.with_suffix(".txt")
+            if label.exists() and not target_label.exists():
+                shutil.copy(label, target_label)
+
+    print(f"Dataset split finished → {output_dir}")
+
+    # build dataset.yaml
     with open(names_file, "r", encoding="utf-8") as f:
         class_names = [line.strip() for line in f if line.strip()]
 
@@ -71,7 +97,9 @@ def main(config_path: str):
 
     with open(output_dir / "dataset.yaml", "w", encoding="utf-8") as f:
         yaml.dump(yaml_data, f, allow_unicode=True)
-    print(f"yaml file added: {output_dir/'dataset.yaml'}")
+
+    print(f"dataset.yaml created → {output_dir / 'dataset.yaml'}")
+    print("=== Done ===")
 
 
 if __name__ == "__main__":
