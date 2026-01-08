@@ -1,7 +1,6 @@
 import random
 import shutil
 from pathlib import Path
-
 import yaml
 from tqdm import tqdm
 
@@ -9,16 +8,16 @@ from tqdm import tqdm
 def main(config_path: str):
     print("=== YOLO Dataset Splitter started ===")
 
+    # Load config
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-    dataset_path = config["dataset"]["path"]
+    dataset_path = Path(config["dataset"]["path"])
     split_ratio = config["split"]
     seed = config["random"]["seed"]
 
-    dataset_dir = Path(dataset_path)
-    obj_dir = dataset_dir / "obj_train_data"
-    names_file = dataset_dir / "obj.names"
+    obj_dir = dataset_path / "obj_train_data"
+    names_file = dataset_path / "obj.names"
 
     if not obj_dir.exists():
         print(f"[ERROR] obj_train_data not found: {obj_dir}")
@@ -26,10 +25,9 @@ def main(config_path: str):
 
     frames_dir = obj_dir / "frames"
     img_dir = frames_dir if frames_dir.exists() else obj_dir
-
     print(f"Image directory selected: {img_dir}")
 
-    # collect images
+    # Collect images
     images = []
     for ext in ("*.jpg", "*.jpeg", "*.png"):
         images.extend(img_dir.glob(ext))
@@ -39,11 +37,10 @@ def main(config_path: str):
         return
 
     print(f"Images found: {len(images)}")
-
     random.seed(seed)
     random.shuffle(images)
 
-    # split dataset
+    # Split dataset
     n = len(images)
     train_end = int(n * split_ratio["train"])
     val_end = train_end + int(n * split_ratio["val"])
@@ -58,13 +55,13 @@ def main(config_path: str):
     for k, v in splits.items():
         print(f"  {k}: {len(v)} images")
 
-    # create output directories
-    output_dir = Path(dataset_path + "_converted")
+    # Output directories
+    output_dir = dataset_path.parent / (dataset_path.name + "_converted")
     for part in splits.keys():
         (output_dir / "images" / part).mkdir(parents=True, exist_ok=True)
         (output_dir / "labels" / part).mkdir(parents=True, exist_ok=True)
 
-    # copy files with progress bar
+    # Copy files with progress bar
     print("Copying files...")
     for split, imgs in splits.items():
         for img in tqdm(imgs, desc=f"Copying {split}", unit="img"):
@@ -82,12 +79,13 @@ def main(config_path: str):
 
     print(f"Dataset split finished → {output_dir}")
 
-    # build dataset.yaml
+    # Read class names
     with open(names_file, "r", encoding="utf-8") as f:
         class_names = [line.strip() for line in f if line.strip()]
 
+    # Create dataset.yaml
     yaml_data = {
-        "path": str(output_dir.resolve()),
+        "path": ".",
         "train": "images/train",
         "val": "images/val",
         "test": "images/test",
