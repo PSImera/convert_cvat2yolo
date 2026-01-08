@@ -13,19 +13,27 @@ def main(config_path: str):
     seed = config["random"]["seed"]
 
     dataset_dir = Path(dataset_path)
-    img_dir = dataset_dir / "obj_train_data\\frames"
+    obj_dir = dataset_dir / "obj_train_data"
     names_file = dataset_dir / "obj.names"
+
+    frames_dir = obj_dir / "frames"
+    if frames_dir.exists():
+        img_dir = frames_dir
+    else:
+        img_dir = obj_dir
+
+    # create output directories
     output_dir = Path(dataset_path + "_converted")
-
-    random.seed(seed)
-
-    # create directories
     for part in split_ratio.keys():
         (output_dir / "images" / part).mkdir(parents=True, exist_ok=True)
         (output_dir / "labels" / part).mkdir(parents=True, exist_ok=True)
 
     # collect & shuffle images
-    images = [f for f in img_dir.glob("*.jpg")]
+    images = []
+    for ext in ("*.jpg", "*.jpeg", "*.png"):
+        images.extend(img_dir.glob(ext))
+
+    random.seed(seed)
     random.shuffle(images)
 
     # split dataset
