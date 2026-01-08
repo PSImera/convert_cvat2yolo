@@ -1,0 +1,10 @@
+dataset:
+  path: "D:\\My_Code\\_Datasets\\apex_enemy_detect\\apex_detect_v2_p1"
+
+split:
+  train: 0.7
+  val: 0.2
+  test: 0.1
+
+random:
+  seed: 1337
