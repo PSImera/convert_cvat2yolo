@@ -85,7 +85,7 @@ def main(config_path: str):
 
     # Create dataset.yaml
     yaml_data = {
-        "path": ".",
+        "path": str(output_dir.resolve()),
         "train": "images/train",
         "val": "images/val",
         "test": "images/test",
