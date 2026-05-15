@@ -87,7 +87,7 @@ python split_dataset.py
 ## Output
 
 A new directory `<dataset>_converted` is created:
-
+```
 dataset_converted/
 ├─ images/
 │  ├─ train/
@@ -98,3 +98,4 @@ dataset_converted/
 │  ├─ val/
 │  └─ test/
 └─ dataset.yaml
+```
