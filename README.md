@@ -10,7 +10,7 @@ automatically generates `dataset.yaml`, and splits the data into **train / val /
 ## Input Dataset Structure
 
 The following input structure is expected:
-
+```
 dataset/
 ├─ obj_train_data/
 │  └─ frames/
@@ -20,6 +20,7 @@ dataset/
 │     ├─ 0002.txt
 │     └─ ...
 ├─ obj.names
+```
 
 - `.jpg / .jpeg / .png` — images
 - `.txt` — YOLO annotations
